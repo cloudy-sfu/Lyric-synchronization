@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lyrics Timestamp Annotation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous"
+    >
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous">
+    </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</head>
+<body class="container-md">
+    <div class="row alert">
+        <div class="col-md-12">
+            <h1>Lyrics Timestamp Annotation</h1>
+            <p class="lead">Prepend timestamp to formalize lyrics</p>
+        </div>
+    </div>
+<div class="row alert">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Audio source</div>
+            <div class="card-body" style="overflow-x: auto;">
+                <ul class="nav nav-tabs" role="tablist" id="provider-switcher">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="provider-1-tab" data-bs-toggle="tab"
+                            data-bs-target="#provider-1" type="button" role="tab"
+                            aria-controls="provider-1" aria-selected="true">Local audio</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="provider-2-tab" data-bs-toggle="tab"
+                            data-bs-target="#provider-2" type="button" role="tab"
+                            aria-controls="provider-2" aria-selected="true">Bilibili video</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="provider-3-tab" data-bs-toggle="tab"
+                            data-bs-target="#provider-3" type="button" role="tab"
+                            aria-controls="provider-3" aria-selected="true">YouTube video</button>
+                    </li>
+                </ul>
+                <div class="tab-content mt-2">
+                    <div class="tab-pane fade show active" id="provider-1" role="tabpanel"
+                         aria-labelledby="provider-1-tab">
+                        <p>If a video is selected, it will be converted to audio.</p>
+                        <p><label><input type="file" class="form-control" id="selection-1"></label></p>
+                    </div>
+                    <div class="tab-pane fade" id="provider-2" role="tabpanel"
+                         aria-labelledby="provider-2-tab">
+                        <p>
+                            Copy video URL from web browser's address bar. It
+                            should be like <code>https://www.bilibili.com/video/&lt;video_id&gt;</code>
+                            Paste in the text field below. Press "Enter" to submit. It
+                            will be converted to audio.
+                        </p>
+                        <p><input type="text" class="form-control" id="selection-2"></p>
+                    </div>
+                    <div class="tab-pane fade" id="provider-3" role="tabpanel"
+                         aria-labelledby="provider-3-tab">
+                        <p>
+                            Copy YouTube video URL from web browser's address bar. It
+                            should be like <code>https://www.youtube.com/watch?v=&lt;video_id&gt;</code>
+                            Paste in the text field below. Press "Enter" to submit.
+                        </p>
+                        <p><input type="text" class="form-control" id="selection-3"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="row alert">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">Lyrics</div>
+                <div class="card-body">
+                    <p>
+                        Upload lyrics from the local text file, where each line is a lyric.
+                        <span style="color: red">
+                            Don't refresh page or change this file before saving the lyrics
+                            in the editor section, otherwise changes will be lost.
+                        </span>
+                    </p>
+                    <p><label><input type="file" id="lyrics-file" class="form-control"></label></p>
+                </div>
+            </div>
+        </div>
+    </div>
+<div class="row alert">
+    <div class="col-md-12">
+        <div id="play" style="overflow-x: auto"></div>
+    </div>
+</div>
+<div class="row alert">
+    <div class="col-md-12">
+        <p>
+            <label>
+                Offset (s)
+                <input type="number" step="0.1" class="form-control" value="0" id="offset">
+            </label>
+            &nbsp;&nbsp;
+            If offset is <code>- 0.5s</code>, when clicking a lyric when the current time of
+            audio is <code>t</code>, the timestamp will be <code>t - 0.5s</code>.
+        </p>
+        <div class="list-group" id="lyrics-lines"></div>
+        <div class="mt-2 d-flex justify-content-center">
+            <a role="button" class="btn btn-primary" id="download-lyrics" onclick="save_lyrics()">Save</a>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+document.getElementById('selection-1').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const audio_url = URL.createObjectURL(file);
+        let audio_tag = document.createElement('audio');
+        audio_tag.controls = true;
+        audio_tag.src = audio_url;
+        audio_tag.style.width = "100%";
+        let player = document.getElementById('play');
+        player.innerHTML = '';
+        player.appendChild(audio_tag);
+    }
+});
+document.getElementById("selection-2").addEventListener("keyup", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        const bilibili_url = "https://jx.91vrchat.com/bl/?url=" + document.getElementById("selection-2").value;
+        let audio_tag = document.createElement('audio');
+        audio_tag.controls = true;
+        audio_tag.src = bilibili_url;
+        audio_tag.style.width = "100%";
+        let player = document.getElementById('play');
+        player.innerHTML = '';
+        player.appendChild(audio_tag);
+    }
+});
+let youtube_player; // Use youtube_player.getCurrentTime() to get current time.
+document.getElementById("selection-3").addEventListener("keyup", function (event) {
+    if (event.key === "Enter") {
+        const youtube_url = document.getElementById("selection-3").value;
+        const youtube_regex = /[?&]v=([^&#]+)/;
+        const matches = youtube_url.match(youtube_regex);
+        const video_id = matches ? matches[1] : null;
+        if (video_id) {
+            let player = document.getElementById("play");
+            let youtube_div = document.createElement("div");
+            youtube_div.id = "youtube-player";
+            player.innerHTML = "";
+            player.appendChild(youtube_div);
+            youtube_player = new YT.Player("youtube-player", {
+                height: `${player.offsetWidth * 0.55}`,
+                width: "100%",
+                videoId: video_id,
+            });
+        }
+    }
+});
+function audio_source_method() {
+    const switcher = document.getElementById("provider-switcher");
+    const active_tab = switcher.querySelector(".nav-link.active");
+    const active_id = active_tab ? active_tab.id : null;
+    if (active_id) {
+        const method = active_id.match(/-(\d+)/)[1];
+        return parseInt(method);
+    }
+}
+document.getElementById('lyrics-file').addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            const content_lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+            const editor = document.getElementById("lyrics-lines");
+            editor.innerHTML = "";
+            const lrc_pattern = /^\[\d+:\d+\.\d+]/;
+            for (const line of content_lines) {
+                const is_lrc = lrc_pattern.test(line);
+                editor.innerHTML += `<button type="button" class="list-group-item list-group-item-action" lrc="${is_lrc}" onclick="switch_lyric(this)">${line}</button>`
+            }
+        };
+        reader.readAsText(file);
+    }
+})
+function switch_lyric(button) {
+    const is_lrc = button.getAttribute("lrc");
+    let lyric = button.textContent;
+    const lrc_pattern = /^\[\d+:\d+\.\d+]/;
+    if (is_lrc === "true") {
+        lyric = lyric.replace(lrc_pattern, "").trim();
+        button.setAttribute("lrc", false);
+        button.innerText = lyric;
+    } else {
+        let current_time_f;
+        if (audio_source_method() === 1) {
+            const player = document.getElementById("play").firstChild;
+            current_time_f = player.currentTime;
+        } else if (audio_source_method() === 2) {
+            const player = document.getElementById("play").firstChild;
+            current_time_f = player.currentTime;
+        } else if (audio_source_method() === 3) {
+            current_time_f = youtube_player.getCurrentTime();
+        } else {
+            current_time_f = 0;
+        }
+        let offset = parseFloat(document.getElementById("offset").value);
+        if (isNaN(offset)) {
+            offset = 0;
+        }
+        current_time_f = Math.max(current_time_f + offset, 0);
+        const minutes = Math.floor(current_time_f / 60);
+        const seconds = Math.floor(current_time_f % 60);
+        const milliseconds = Math.floor((current_time_f % 1) * 100);
+        // Add leading zeros if necessary
+        const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+        const secondsStr = seconds < 10 ? '0' + seconds : seconds;
+        const millisecondsStr = milliseconds < 10 ? '0' + milliseconds : milliseconds;
+        lyric = `[${minutesStr}:${secondsStr}.${millisecondsStr}] ` + lyric;
+        button.setAttribute("lrc", true);
+        button.innerText = lyric;
+    }
+}
+function save_lyrics() {
+    const lyrics_list = document.getElementById("lyrics-lines");
+    let lyrics = [];
+    for (let button of lyrics_list.children) {
+        lyrics.push(button.textContent);
+    }
+    const lyrics_text = lyrics.join("\n");
+    const lyrics_blob = new Blob([lyrics_text], { type: "text/plain" });
+    const lyrics_url = URL.createObjectURL(lyrics_blob);
+    const lyrics_file = document.getElementById("lyrics-file");
+    let filename;
+    if (lyrics_file.files.length > 0) {
+        filename = lyrics_file.files[0].name;
+    } else {
+        filename = "no_name.lrc";
+    }
+    const download_link = document.createElement('a');
+    download_link.href = lyrics_url;
+    download_link.download = extension_name_lrc(filename);
+    download_link.click();
+    URL.revokeObjectURL(lyrics_url);
+}
+function extension_name_lrc(filename) {
+    const dot_index = filename.lastIndexOf(".");
+    if (dot_index === -1) {
+        return filename + ".lrc";
+    } else {
+        return filename.substring(0, dot_index) + ".lrc";
+    }
+}
+</script>
+</html>
