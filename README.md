@@ -1,6 +1,6 @@
-# Lyrics timestamp annotation
+# Lyric synchronization
 
-Prepend timestamp to formalize lyrics
+Audio-based lyrics timestamp tool
 
 [![](https://shields.io/badge/dependencies-jx.91vrchat.com-blue)](https://jx.91vrchat.com/)
 
